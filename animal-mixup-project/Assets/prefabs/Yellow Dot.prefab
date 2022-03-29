@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5504877336798263363}
   m_Layer: 0
   m_Name: Yellow Dot
-  m_TagString: Untagged
+  m_TagString: Yellow Dot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
