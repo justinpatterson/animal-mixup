@@ -25,12 +25,12 @@ public class Dot : MonoBehaviour
     void Start()
     {
         board = FindObjectOfType<Board>();
-        targetX = (int)transform.position.x;
-        targetY = (int)transform.position.y;
-        row = targetY;
-        column = targetX;
-        previousRow = row;
-        previousColumn = column;
+        //targetX = (int)transform.position.x;
+        //targetY = (int)transform.position.y;
+        //row = targetY;
+        //column = targetX;
+        //previousRow = row;
+        //previousColumn = column;
     }
 
     // Update is called once per frame
@@ -41,6 +41,7 @@ public class Dot : MonoBehaviour
         {
             SpriteRenderer mySprite = GetComponent<SpriteRenderer>();
             mySprite.color = new Color(0f, 0f, 0f, .2f);
+            Debug.Log("Should turn gray...");
         }
         targetX = column;
         targetY = row;
@@ -81,10 +82,13 @@ public class Dot : MonoBehaviour
     public IEnumerator CheckMoveCo()
     {
         yield return new WaitForSeconds(.5f);
+        Debug.Log("About to Check Move Coroutine");
         if(otherDot != null)
         {
+            Debug.Log("Found other dot...");
             if(!isMatched && !otherDot.GetComponent<Dot>().isMatched)
             {
+                Debug.Log("Neither dot is matched yet...");
                 //otherDot.GetComponent<Dot>().previousRow = otherDot.GetComponent<Dot>().row;
                 //otherDot.GetComponent<Dot>().previousColumn = otherDot.GetComponent<Dot>().column;
 
@@ -93,10 +97,15 @@ public class Dot : MonoBehaviour
 
                 row = previousRow;
                 column = previousColumn;
+                yield return new WaitForSeconds(.5f);
+                board.currentState = GameState.move;
+                Debug.Log("Resuming game, no match found...");
             }
             else
             {
+                Debug.Log("Will try to destroy and remove dots from board");
                 board.DestroyMatches();
+                
             }
             otherDot = null;
         }
@@ -105,27 +114,43 @@ public class Dot : MonoBehaviour
 
         private void OnMouseDown()
     {
-        //Debug.Log("Mouse down detected for " + column + ", " + row);
+        Debug.Log("dot was clicked");
+        if (board.currentState == GameState.move)
+        {
+            
             FirstTouchPosition = Camera.main.ScreenToViewportPoint(Input.mousePosition);
-            //Debug.Log(FirstTouchPosition);
-
+           
+        }
     }
 
     private void OnMouseUp()
     {
-        //Debug.Log("Mouse UP detected for " + column + ", " + row);
-        FinalTouchPosition = Camera.main.ScreenToViewportPoint(Input.mousePosition);
-
-
-        CalculateAngle();
+        Debug.Log("dot was UN-clocked");
+        if (board.currentState == GameState.move)
+        {
+            
+            FinalTouchPosition = Camera.main.ScreenToViewportPoint(Input.mousePosition);
+            CalculateAngle();
+        }
     }
 
     void CalculateAngle()
-    {   
+    {
+        float absYSwipe = Mathf.Abs(FinalTouchPosition.y - FirstTouchPosition.y);
+        float absXSwipe = Mathf.Abs(FinalTouchPosition.x - FirstTouchPosition.x);
+        if (absYSwipe > swipeResist || absXSwipe > swipeResist)
+        {
             swipeAngle = Mathf.Atan2(FinalTouchPosition.y - FirstTouchPosition.y, FinalTouchPosition.x - FirstTouchPosition.x) * 180 / Mathf.PI;
-
-            //Debug.Log(swipeAngle);
+            Debug.Log("Swipe angle is " + swipeAngle.ToString());
             MovePieces();
+            board.currentState = GameState.wait;
+        }
+        else
+        {
+            Debug.Log("Neither " + absYSwipe + " NOR " + absXSwipe + " exceeded " + swipeResist);
+            board.currentState = GameState.move;
+        }
+        
         
     }
 
@@ -134,11 +159,13 @@ public class Dot : MonoBehaviour
 
         previousRow = row;
         previousColumn = column;
-
+        Debug.Log("BEFORE SWIPE, I AM " + row + ", " + column);
         if (swipeAngle > -45 && swipeAngle <= 45 && column < board.width -1)
         {
             //Right Swipe
             otherDot = board.allDots[column + 1, row];
+            previousRow = row;
+            previousColumn = column;
             otherDot.GetComponent<Dot>(). column -=1;
             column += 1;
 
@@ -146,6 +173,8 @@ public class Dot : MonoBehaviour
         {
             //Up Swipe
             otherDot = board.allDots[column, row + 1];
+            previousRow = row;
+            previousColumn = column;
             otherDot.GetComponent<Dot>().row -= 1;
             row += 1;
 
@@ -153,6 +182,8 @@ public class Dot : MonoBehaviour
         {
             //Left Swipe
             otherDot = board.allDots[column - 1, row];
+            previousRow = row;
+            previousColumn = column;
             otherDot.GetComponent<Dot>().column += 1;
             column -= 1;
 
@@ -160,10 +191,13 @@ public class Dot : MonoBehaviour
         {
             //Down Swipe
             otherDot = board.allDots[column, row - 1];
+            previousRow = row;
+            previousColumn = column;
             otherDot.GetComponent<Dot>().row += 1;
             row -= 1;
 
         }
+        Debug.Log("AFTER SWIPE, I AM " + row + ", " + column);
         StartCoroutine(CheckMoveCo());
     }
 

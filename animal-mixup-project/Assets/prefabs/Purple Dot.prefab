@@ -98,9 +98,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   column: 0
   row: 0
+  previousColumn: 0
+  previousRow: 0
   targetX: 0
   targetY: 0
+  isMatched: 0
   swipeAngle: 0
+  swipeResist: 0.08
 --- !u!58 &-7293944761557000782
 CircleCollider2D:
   m_ObjectHideFlags: 0
